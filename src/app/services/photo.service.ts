@@ -16,7 +16,9 @@ export class PhotoService {
 
   constructor(platform: Platform) {
     this.platform = platform;
-  }  public async addNewToGallery() {
+  } 
+  
+  public async addNewToGallery() {
     // Take a photo
     const capturedPhoto = await Camera.getPhoto({
       resultType: CameraResultType.Uri,
@@ -29,59 +31,59 @@ export class PhotoService {
     Storage.set({
       key: this.PHOTO_STORAGE,
       value: this.platform.is('hybrid')
-              ? JSON.stringify(this.photos)
-              : JSON.stringify(this.photos.map(p => {
-                // Don't save the base64 representation of the photo data,
-                // since it's already saved on the Filesystem
-                const photoCopy = { ...p };
-                delete photoCopy.base64;
-    
-                return photoCopy;
-            }))
+        ? JSON.stringify(this.photos)
+        : JSON.stringify(this.photos.map(p => {
+          // Don't save the base64 representation of the photo data,
+          // since it's already saved on the Filesystem
+          const photoCopy = { ...p };
+          delete photoCopy.base64;
+
+          return photoCopy;
+        }))
     });
   }
   public async loadSaved() {
-  // Retrieve cached photo array data
-  const photos = await Storage.get({ key: this.PHOTO_STORAGE });
-  this.photos = JSON.parse(photos.value) || [];
+    // Retrieve cached photo array data
+    const photos = await Storage.get({ key: this.PHOTO_STORAGE });
+    this.photos = JSON.parse(photos.value) || [];
 
-  // Easiest way to detect when running on the web:
-  // “when the platform is NOT hybrid, do this”
-  if (!this.platform.is('hybrid')) {
-    // Display the photo by reading into base64 format
-    for (let photo of this.photos) {
-      // Read each saved photo's data from the Filesystem
-      const readFile = await Filesystem.readFile({
+    // Easiest way to detect when running on the web:
+    // “when the platform is NOT hybrid, do this”
+    if (!this.platform.is('hybrid')) {
+      // Display the photo by reading into base64 format
+      for (let photo of this.photos) {
+        // Read each saved photo's data from the Filesystem
+        const readFile = await Filesystem.readFile({
           path: photo.filepath,
           directory: FilesystemDirectory.Data
-      });
+        });
 
-      // Web platform only: Save the photo into the base64 field
-      photo.base64 = `data:image/jpeg;base64,${readFile.data}`;
+        // Web platform only: Save the photo into the base64 field
+        photo.base64 = `data:image/jpeg;base64,${readFile.data}`;
+      }
     }
-  }
   }
 
   public async deletePicture(photo: Photo, position: number) {
     // Remove this photo from the Photos reference data array
     this.photos.splice(position, 1);
-  
+
     // Update photos array cache by overwriting the existing photo array
     Storage.set({
       key: this.PHOTO_STORAGE,
       value: JSON.stringify(this.photos)
     });
-  
+
     // delete photo file from filesystem
     const filename = photo.filepath
-                        .substr(photo.filepath.lastIndexOf('/') + 1);
-  
+      .substr(photo.filepath.lastIndexOf('/') + 1);
+
     await Filesystem.deleteFile({
       path: filename,
       directory: FilesystemDirectory.Data
     });
   }
-  
+
   private async savePicture(cameraPhoto: CameraPhoto) {
     // Convert photo to base64 format, required by Filesystem API to save
     const base64Data = await this.readAsBase64(cameraPhoto);
@@ -113,22 +115,22 @@ export class PhotoService {
   }
 
   private async readAsBase64(cameraPhoto: CameraPhoto) {
-  // "hybrid" will detect Cordova or Capacitor
-  if (this.platform.is('hybrid')) {
-    // Read the file into base64 format
-    const file = await Filesystem.readFile({
-      path: cameraPhoto.path
-    });
+    // "hybrid" will detect Cordova or Capacitor
+    if (this.platform.is('hybrid')) {
+      // Read the file into base64 format
+      const file = await Filesystem.readFile({
+        path: cameraPhoto.path
+      });
 
-    return file.data;
-  }
-  else {
-    // Fetch the photo, read as a blob, then convert to base64 format
-    const response = await fetch(cameraPhoto.webPath);
-    const blob = await response.blob();
+      return file.data;
+    }
+    else {
+      // Fetch the photo, read as a blob, then convert to base64 format
+      const response = await fetch(cameraPhoto.webPath);
+      const blob = await response.blob();
 
-    return await this.convertBlobToBase64(blob) as string;
-  }
+      return await this.convertBlobToBase64(blob) as string;
+    }
   }
 
   convertBlobToBase64 = (blob: Blob) => new Promise((resolve, reject) => {

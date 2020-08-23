@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { PhotoService } from '../services/photo.service';
 import { ActionSheetController } from '@ionic/angular';
+import { KeycloakService } from '../keycloak/keycloak.service';
 
 @Component({
   selector: 'app-photo-gallery',
@@ -10,13 +11,21 @@ import { ActionSheetController } from '@ionic/angular';
 export class PhotoGalleryPage implements OnInit{
   photos = this.photoService.photos;
 
-  constructor(public actionSheetController: ActionSheetController, public photoService: PhotoService) {}
+  constructor(public actionSheetController: ActionSheetController, public photoService: PhotoService, public keycloak: KeycloakService) {}
   ngOnInit() {
     this.photoService.loadSaved();
   }
   addPhotoToGallery() {
     this.photoService.addNewToGallery();
   }
+
+  token() {
+    console.log('checking token');
+    this.keycloak.getToken().then(a => {
+      console.log('aaaaaaaa ' + a);
+    });
+    }
+
   public async showActionSheet(photo, position) {
     const actionSheet = await this.actionSheetController.create({
       header: 'Photos',

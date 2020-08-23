@@ -1,7 +1,8 @@
 {
   "name": "kooriim-mobile",
   "integrations": {
-    "capacitor": {}
+    "capacitor": {},
+    "cordova": {}
   },
   "type": "angular"
 }
