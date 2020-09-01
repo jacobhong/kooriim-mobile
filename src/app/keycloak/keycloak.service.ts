@@ -18,8 +18,6 @@ export class KeycloakService {
   keycloak = Keycloak('/assets/keycloak.json');
   // keycloak = Keycloak('/assets/keycloak.json');
   public init() {
-    console.log('hihffffi');
-    console.log(this.keycloak);
     return new Promise((resolve, reject) => {
       this.keycloak.init({
         adapter: 'cordova',
@@ -27,13 +25,10 @@ export class KeycloakService {
         promiseType: 'legacy',
         redirectUri: 'http://localhost'
       }).success((s) => {
-        console.log('SUCCESSS');
+        console.log(s);
         console.log(this.keycloak.token);
-        console.log(this.keycloak.idToken);
-        console.log(this.keycloak.authenticated);
         resolve();
       }).error((err) => {
-        console.log('FUCKING ERROR' + err);
         reject(err);
       });
     });
