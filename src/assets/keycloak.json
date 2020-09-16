@@ -1,6 +1,6 @@
 {
-  "realm": "kooriim-mobile",
-  "auth-server-url": "https://keycloak.kooriim.com/auth/",
+  "realm": "kooriim-fe",
+  "auth-server-url": "https://keycloak.kooriim.com:8443/auth/",
   "ssl-required": "external",
   "resource": "kooriim-mobile",
   "public-client": true,

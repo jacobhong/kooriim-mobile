@@ -13,7 +13,7 @@ export class PhotoGalleryPage implements OnInit{
 
   constructor(public actionSheetController: ActionSheetController, public photoService: PhotoService, public keycloak: KeycloakService) {}
   ngOnInit() {
-    // this.photoService.loadSaved();
+    this.photoService.loadSaved();
   }
   addPhotoToGallery() {
     this.photoService.addNewToGallery();

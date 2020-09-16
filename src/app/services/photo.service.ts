@@ -4,6 +4,8 @@ import {
   CameraPhoto, CameraSource
 } from '@capacitor/core';
 import { Platform } from '@ionic/angular';
+import { HTTP } from '@ionic-native/http/ngx';
+import { KeycloakService } from '../keycloak/keycloak.service';
 
 const { Camera, Filesystem, Storage } = Plugins;
 @Injectable({
@@ -14,10 +16,10 @@ export class PhotoService {
   private PHOTO_STORAGE: string = "photos";
   private platform: Platform;
 
-  constructor(platform: Platform) {
+  constructor(private http: HTTP, platform: Platform, private keycloak: KeycloakService) {
     this.platform = platform;
-  } 
-  
+  }
+
   public async addNewToGallery() {
     // Take a photo
     const capturedPhoto = await Camera.getPhoto({
@@ -25,7 +27,6 @@ export class PhotoService {
       source: CameraSource.Camera,
       quality: 100
     });
-
     const savedImageFile = await this.savePicture(capturedPhoto);
     this.photos.unshift(savedImageFile);
     Storage.set({
@@ -42,6 +43,7 @@ export class PhotoService {
         }))
     });
   }
+
   public async loadSaved() {
     // Retrieve cached photo array data
     const photos = await Storage.get({ key: this.PHOTO_STORAGE });
@@ -87,7 +89,7 @@ export class PhotoService {
   private async savePicture(cameraPhoto: CameraPhoto) {
     // Convert photo to base64 format, required by Filesystem API to save
     const base64Data = await this.readAsBase64(cameraPhoto);
-
+    this.startUpload(cameraPhoto);
     // Write the file to the data directory
     const fileName = new Date().getTime() + '.jpeg';
     const savedFile = await Filesystem.writeFile({
@@ -141,5 +143,34 @@ export class PhotoService {
     };
     reader.readAsDataURL(blob);
   })
+
+  async startUpload(cameraPhoto) {
+    const imageName = cameraPhoto.webPath.substring(cameraPhoto.webPath.lastIndexOf('/') + 1);
+    const response = await fetch(cameraPhoto.webPath);
+    const blob = await response.blob();
+    const formData = new FormData();
+    formData.append('file', blob, imageName);
+    // Replace extension according to your media type
+    // call method that creates a blob from dataUri
+    const headerss = {
+      'Authorization': 'Bearer ' + this.keycloak.keycloak.token
+    };
+
+    const options = {
+      method: 'POST',
+      body: formData,
+      mode: new Request('').mode,
+      headers: headerss
+    };
+
+    await fetch('https://photos.kooriim.com/photo-album-service/photos', options)
+      .then(response => {
+        response.json().then(r => {
+          console.log('upload successful ' + JSON.stringify(r));
+        });
+      }).catch(error => {
+        console.log('ERROR UPLOAD FILE ' + error);
+      });
+  }
 
 }
